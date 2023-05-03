@@ -1,0 +1,16 @@
+[features]
+seeds = false
+skip-lint = false
+[programs.localnet]
+nft_minter = "85XEB1KDbtvEToxv8eRmvXzemiaiVc3oxJrwxENk2A8Z"
+nft_shop = "EGXFcNe2hbcNBL6EVtz1jtdxaSgPyiYzWqXZAYeqceYr"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
