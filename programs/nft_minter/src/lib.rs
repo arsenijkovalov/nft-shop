@@ -1,3 +1,5 @@
+#![allow(clippy::result_large_err)]
+
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token, token};
 
@@ -7,7 +9,7 @@ pub mod utils;
 use instructions::*;
 use utils::*;
 
-declare_id!("85XEB1KDbtvEToxv8eRmvXzemiaiVc3oxJrwxENk2A8Z");
+declare_id!("3u2FbbGTHow99DujYPjHEGxujQ1Mtw6DjukWDe2hYpHp");
 
 #[program]
 pub mod nft_minter {
@@ -52,9 +54,7 @@ pub struct CreateToken<'info> {
     pub payer: Signer<'info>,
     #[account(mut)]
     pub mint_account: Signer<'info>,
-    #[account(mut)]
     pub mint_authority: Signer<'info>,
-    #[account(mut)]
     pub update_authority: Signer<'info>,
     /// CHECK: Metaplex will check this
     #[account(mut)]
@@ -72,9 +72,7 @@ pub struct MintToken<'info> {
     pub payer: Signer<'info>,
     #[account(mut)]
     pub mint_account: Signer<'info>,
-    #[account(mut)]
     pub mint_authority: Signer<'info>,
-    #[account(mut)]
     pub update_authority: Signer<'info>,
     /// CHECK: Anchor will check this
     #[account(mut)]

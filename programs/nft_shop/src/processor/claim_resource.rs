@@ -14,7 +14,7 @@ impl<'info> ClaimResource<'info> {
         let selling_resource = &self.selling_resource;
         let vault = &self.vault;
         let metadata = &self.metadata;
-        let vault_owner = &self.owner;
+        let vault_owner = &self.vault_owner;
         let destination = &self.destination;
         let clock = &self.clock;
         let treasury_holder = &self.treasury_holder;

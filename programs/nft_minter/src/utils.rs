@@ -21,19 +21,14 @@ impl From<MPL_Creator> for Creator {
 }
 
 pub fn into_mpl_creators(creators: Option<Vec<Creator>>) -> Option<Vec<MPL_Creator>> {
-    if creators.is_some() {
-        Some(
-            creators
-                .unwrap()
-                .iter()
-                .map(|creator| MPL_Creator {
-                    address: creator.address,
-                    share: creator.share,
-                    verified: creator.verified,
-                })
-                .collect(),
-        )
-    } else {
-        None
-    }
+    creators.map(|creators| {
+        creators
+            .iter()
+            .map(|creator| MPL_Creator {
+                address: creator.address,
+                share: creator.share,
+                verified: creator.verified,
+            })
+            .collect()
+    })
 }

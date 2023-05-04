@@ -2,8 +2,8 @@
 seeds = false
 skip-lint = false
 [programs.localnet]
-nft_minter = "85XEB1KDbtvEToxv8eRmvXzemiaiVc3oxJrwxENk2A8Z"
-nft_shop = "EGXFcNe2hbcNBL6EVtz1jtdxaSgPyiYzWqXZAYeqceYr"
+nft_minter = "3u2FbbGTHow99DujYPjHEGxujQ1Mtw6DjukWDe2hYpHp"
+nft_shop = "7pXnhhAyw8HCwWPHEYy3nwhdFCc4nQBWVAgQGTBPAoDe"
 
 [registry]
 url = "https://api.apr.dev"

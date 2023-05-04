@@ -8,6 +8,7 @@ import {
   createMintToInstruction,
   createInitializeAccountInstruction,
   ACCOUNT_SIZE,
+  createTransferInstruction,
 } from "@solana/spl-token";
 
 const PROGRAM_ID = (anchor.workspace.NftShop as Program<NftShop>).programId;
@@ -22,6 +23,41 @@ const PAYOUT_TICKET_PREFIX = "payout_ticket";
 const HOLDER_PREFIX = "holder";
 const PRIMARY_METADATA_CREATORS_PREFIX = "primary_creators";
 const EDITION_MARKER_BIT_SIZE = 248;
+const HUNDRED_SOL = 100_000_000_000;
+const EMPTY_SPACE = 0;
+
+export const createSystemAccount = async ({
+  provider,
+  payer,
+}: {
+  provider: anchor.Provider;
+  payer: anchor.Wallet;
+}): Promise<anchor.web3.Keypair> => {
+  const newAccountKeypair = anchor.web3.Keypair.generate();
+  const space = EMPTY_SPACE;
+  const lamports = await provider.connection.getMinimumBalanceForRentExemption(
+    space
+  );
+
+  // Create a System Account with 100 SOL balance
+  const tx = new anchor.web3.Transaction().add(
+    anchor.web3.SystemProgram.createAccount({
+      fromPubkey: payer.publicKey,
+      newAccountPubkey: newAccountKeypair.publicKey,
+      lamports,
+      space,
+      programId: anchor.web3.SystemProgram.programId,
+    }),
+    anchor.web3.SystemProgram.transfer({
+      fromPubkey: payer.publicKey,
+      toPubkey: newAccountKeypair.publicKey,
+      lamports: HUNDRED_SOL,
+    })
+  );
+
+  await provider.sendAndConfirm(tx, [payer.payer, newAccountKeypair]);
+  return newAccountKeypair;
+};
 
 export const createMintAccount = async ({
   provider,

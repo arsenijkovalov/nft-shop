@@ -27,9 +27,9 @@ impl<'info> Buy<'info> {
         let new_mint = &mut self.new_mint;
         let edition_marker_info = &mut self.edition_marker.to_account_info();
         let vault = &mut self.vault;
-        let owner = Box::new(&self.owner);
+        let vault_owner = Box::new(&self.vault_owner);
         let new_token_account = &self.new_token_account;
-        let master_edition_metadata = Box::new(&self.master_edition_metadata);
+        let master_edition_metadata = Box::new(&self.metadata);
         let clock = &self.clock;
         let rent = &self.rent;
         let token_program = &self.token_program;
@@ -119,7 +119,7 @@ impl<'info> Buy<'info> {
             &new_mint.to_account_info(),
             &user_wallet.to_account_info(),
             &user_wallet.to_account_info(),
-            &owner.to_account_info(),
+            &vault_owner.to_account_info(),
             &vault.to_account_info(),
             &master_edition_metadata.to_account_info(),
             &master_edition.to_account_info(),

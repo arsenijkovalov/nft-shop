@@ -11,14 +11,14 @@ impl<'info> InitSellingResource<'info> {
         max_supply: Option<u64>,
     ) -> Result<()> {
         let store = &self.store;
-        let admin = &self.admin;
+        let store_admin = &self.store_admin;
         let selling_resource = &mut self.selling_resource;
         let selling_resource_owner = &self.selling_resource_owner;
         let resource_mint = &self.resource_mint;
         let master_edition_info = &self.master_edition.to_account_info();
         let metadata = &self.metadata;
         let vault = &self.vault;
-        let owner = &self.owner;
+        let vault_owner = &self.vault_owner;
         let resource_token = &self.resource_token;
         let token_program = &self.token_program;
 
@@ -85,7 +85,7 @@ impl<'info> InitSellingResource<'info> {
         let cpi_accounts = token::Transfer {
             from: resource_token.to_account_info(),
             to: vault.to_account_info(),
-            authority: admin.to_account_info(),
+            authority: store_admin.to_account_info(),
         };
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
         token::transfer(cpi_ctx, 1)?;
@@ -94,7 +94,7 @@ impl<'info> InitSellingResource<'info> {
         selling_resource.owner = selling_resource_owner.key();
         selling_resource.resource = resource_mint.key();
         selling_resource.vault = vault.key();
-        selling_resource.vault_owner = owner.key();
+        selling_resource.vault_owner = vault_owner.key();
         selling_resource.supply = 0;
         selling_resource.max_supply = actual_max_supply;
         selling_resource.state = SellingResourceState::Created;

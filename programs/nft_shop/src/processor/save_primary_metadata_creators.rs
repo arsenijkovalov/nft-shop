@@ -9,7 +9,7 @@ impl<'info> SavePrimaryMetadataCreators<'info> {
         creators: Vec<Creator>,
     ) -> Result<()> {
         let metadata = &self.metadata;
-        let admin = &self.admin;
+        let metadata_update_authority = &self.metadata_update_authority;
         let secondary_metadata_creators = &mut self.primary_metadata_creators;
         let metadata_state: mpl_token_metadata::state::Metadata =
             mpl_token_metadata::state::Metadata::from_account_info(metadata)?;
@@ -30,7 +30,10 @@ impl<'info> SavePrimaryMetadataCreators<'info> {
             return Err(ErrorCode::PrimarySaleIsNotAllowed.into());
         }
 
-        assert_keys_equal(metadata_state.update_authority, *admin.key)?;
+        assert_keys_equal(
+            metadata_state.update_authority,
+            *metadata_update_authority.key,
+        )?;
 
         secondary_metadata_creators.creators = creators;
 

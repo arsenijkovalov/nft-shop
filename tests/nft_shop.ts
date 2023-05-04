@@ -15,6 +15,7 @@ import {
   findTradeHistoryAddress,
   findEditionMarkerAddress,
   findPrimaryMetadataCreatorsAddress,
+  createSystemAccount,
 } from "./utils";
 
 export const createStore = async ({
@@ -23,8 +24,12 @@ export const createStore = async ({
 }: {
   nftShopProgram: anchor.Program<NftShop>;
   payer: anchor.Wallet;
-}): Promise<anchor.web3.Keypair> => {
+}): Promise<{
+  storeKeypair: anchor.web3.Keypair;
+  storeAdminKeypair: anchor.web3.Keypair;
+}> => {
   const storeKeypair = anchor.web3.Keypair.generate();
+  const storeAdminKeypair = payer.payer;
 
   const name = "Store Name";
   const description = "Store Description";
@@ -33,17 +38,20 @@ export const createStore = async ({
     const tx = await nftShopProgram.methods
       .createStore(name, description)
       .accounts({
-        admin: payer.publicKey,
         store: storeKeypair.publicKey,
+        storeAdmin: storeAdminKeypair.publicKey,
       })
-      .signers([storeKeypair])
+      .signers([storeKeypair, storeAdminKeypair])
       .rpc();
     console.log("Transaction [Create Store]", tx);
   } catch (error) {
     console.log(error);
   }
 
-  return storeKeypair;
+  return {
+    storeKeypair,
+    storeAdminKeypair,
+  };
 };
 
 export const initSellingResource = async ({
@@ -52,19 +60,24 @@ export const initSellingResource = async ({
   nftMinterProgram,
   payer,
   storeKeypair,
+  storeAdminKeypair,
 }: {
   provider: anchor.Provider;
   nftShopProgram: anchor.Program<NftShop>;
   nftMinterProgram: anchor.Program<NftMinter>;
   payer: anchor.Wallet;
   storeKeypair: anchor.web3.Keypair;
+  storeAdminKeypair: anchor.web3.Keypair;
 }): Promise<{
   sellingResourceKeypair: anchor.web3.Keypair;
   sellingResourceOwnerKeypair: anchor.web3.Keypair;
   vaultKeypair: anchor.web3.Keypair;
 }> => {
   const sellingResourceKeypair = anchor.web3.Keypair.generate();
-  const sellingResourceOwnerKeypair = payer.payer;
+  const sellingResourceOwnerKeypair = await createSystemAccount({
+    provider,
+    payer,
+  });
 
   const resourceMintKeypair = anchor.web3.Keypair.generate();
 
@@ -164,7 +177,7 @@ export const initSellingResource = async ({
       .initSellingResource(masterEditionBump, vaultOwnerBump, new BN(maxSupply))
       .accounts({
         store: storeKeypair.publicKey,
-        admin: payer.publicKey,
+        storeAdmin: storeAdminKeypair.publicKey,
         sellingResource: sellingResourceKeypair.publicKey,
         sellingResourceOwner: sellingResourceOwnerKeypair.publicKey,
         metadata,
@@ -172,9 +185,9 @@ export const initSellingResource = async ({
         resourceMint: resourceMintKeypair.publicKey,
         resourceToken: resourceToken,
         vault: vaultKeypair.publicKey,
-        owner: vaultOwner,
+        vaultOwner,
       })
-      .signers([sellingResourceKeypair])
+      .signers([storeAdminKeypair, sellingResourceKeypair])
       .rpc();
     console.log("Transaction [Init Selling Resource]", tx);
   } catch (error) {
@@ -200,7 +213,7 @@ describe("nft_shop", async () => {
   const NFT_PRICE = 10;
 
   it("Test User Flow", async () => {
-    const storeKeypair = await createStore({
+    const { storeKeypair, storeAdminKeypair } = await createStore({
       nftShopProgram,
       payer,
     });
@@ -215,6 +228,7 @@ describe("nft_shop", async () => {
       nftMinterProgram,
       payer,
       storeKeypair,
+      storeAdminKeypair,
     });
 
     const marketKeypair = anchor.web3.Keypair.generate();
@@ -264,13 +278,13 @@ describe("nft_shop", async () => {
         .accounts({
           market: marketKeypair.publicKey,
           store: storeKeypair.publicKey,
-          sellingResourceOwner: sellingResourceOwnerKeypair.publicKey,
           sellingResource: sellingResourceKeypair.publicKey,
-          mint: treasuryMintKeypair.publicKey,
+          sellingResourceOwner: sellingResourceOwnerKeypair.publicKey,
+          treasuryMint: treasuryMintKeypair.publicKey,
           treasuryHolder: treasuryHolderKeypair.publicKey,
-          owner: treasuryOwner,
+          treasuryOwner,
         })
-        .signers([marketKeypair])
+        .signers([marketKeypair, sellingResourceOwnerKeypair])
         .rpc();
       console.log("Transaction [Create Market]", tx);
     } catch (error) {
@@ -295,7 +309,7 @@ describe("nft_shop", async () => {
         )
         .accounts({
           market: marketKeypair.publicKey,
-          owner: sellingResourceOwnerKeypair.publicKey,
+          sellingResourceOwner: sellingResourceOwnerKeypair.publicKey,
         })
         .signers([sellingResourceOwnerKeypair])
         .rpc();
@@ -341,17 +355,17 @@ describe("nft_shop", async () => {
       mint: newMintKeypair,
     });
 
-    const newMintTokenAccount = anchor.web3.Keypair.generate();
+    const newTokenAccountMint = anchor.web3.Keypair.generate();
     await createTokenAccount({
       provider,
       payer,
-      tokenAccount: newMintTokenAccount,
+      tokenAccount: newTokenAccountMint,
       mint: newMintKeypair.publicKey,
     });
     await mintTo({
       provider,
       mint: newMintKeypair.publicKey,
-      destination: newMintTokenAccount.publicKey,
+      destination: newTokenAccountMint.publicKey,
       authority: payer.payer,
       amount: 1,
     });
@@ -391,16 +405,18 @@ describe("nft_shop", async () => {
       const tx = await nftShopProgram.methods
         .savePrimaryMetadataCreators(primaryMetadataCreatorsBump, creators)
         .accounts({
-          admin: sellingResourceOwnerKeypair.publicKey,
+          metadataUpdateAuthority: sellingResourceOwnerKeypair.publicKey,
           metadata,
           primaryMetadataCreators,
         })
-        .signers([])
+        .signers([sellingResourceOwnerKeypair])
         .rpc();
       console.log("Transaction [Save Primary Metadata Creators]", tx);
     } catch (error) {
       console.log(error);
     }
+
+    const userWalletKeypair = payer.payer;
 
     // Buy
     try {
@@ -410,7 +426,7 @@ describe("nft_shop", async () => {
           market: marketKeypair.publicKey,
           sellingResource: sellingResourceKeypair.publicKey,
           userTokenAccount: userTokenAccount.publicKey,
-          userWallet: payer.publicKey,
+          userWallet: userWalletKeypair.publicKey,
           tradeHistory,
           treasuryHolder: treasuryHolderKeypair.publicKey,
           newMetadata,
@@ -419,12 +435,12 @@ describe("nft_shop", async () => {
           newMint: newMintKeypair.publicKey,
           editionMarker,
           vault: sellingResourceData.vault,
-          owner: vaultOwner,
-          newTokenAccount: newMintTokenAccount.publicKey,
-          masterEditionMetadata: metadata,
+          vaultOwner,
+          newTokenAccount: newTokenAccountMint.publicKey,
+          metadata,
           tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
         })
-        .signers([payer.payer])
+        .signers([userWalletKeypair])
         .rpc();
       console.log("Transaction [Buy]", tx);
     } catch (error) {
@@ -437,7 +453,7 @@ describe("nft_shop", async () => {
         .closeMarket()
         .accounts({
           market: marketKeypair.publicKey,
-          owner: sellingResourceOwnerKeypair.publicKey,
+          sellingResourceOwner: sellingResourceOwnerKeypair.publicKey,
         })
         .signers([sellingResourceOwnerKeypair])
         .rpc();
@@ -446,7 +462,6 @@ describe("nft_shop", async () => {
       console.log(error);
     }
 
-    // Withdraw
     const [payoutTicket, payoutTicketBump] = findPayoutTicketAddress(
       marketKeypair.publicKey,
       primaryRoyaltiesHolder.publicKey
@@ -457,15 +472,18 @@ describe("nft_shop", async () => {
       owner: primaryRoyaltiesHolder.publicKey,
     });
 
-    const remainingAccounts: anchor.web3.AccountMeta[] = [];
+    const primaryMetadataCreatorsData: anchor.web3.AccountMeta[] = [];
     for (const creator of [primaryMetadataCreators]) {
-      remainingAccounts.push({
+      primaryMetadataCreatorsData.push({
         pubkey: creator!,
         isWritable: true,
         isSigner: false,
       });
     }
 
+    const payerKeypair = payer.payer;
+
+    // Withdraw
     try {
       const tx = await nftShopProgram.methods
         .withdraw(treasuryOwnerBump, payoutTicketBump)
@@ -475,14 +493,14 @@ describe("nft_shop", async () => {
           metadata,
           treasuryHolder: treasuryHolderKeypair.publicKey,
           treasuryMint: treasuryMintKeypair.publicKey,
-          owner: treasuryOwner,
+          treasuryOwner,
           destination,
           funder: primaryRoyaltiesHolder.publicKey,
-          payer: payer.publicKey,
+          payer: payerKeypair.publicKey,
           payoutTicket,
         })
-        .remainingAccounts(remainingAccounts)
-        .signers([payer.payer])
+        .remainingAccounts(primaryMetadataCreatorsData)
+        .signers([payerKeypair])
         .rpc();
       console.log("Transaction [Withdraw]", tx);
     } catch (error) {
@@ -508,7 +526,7 @@ describe("nft_shop", async () => {
           sellingResourceOwner: sellingResourceOwnerKeypair.publicKey,
           vault: vaultKeypair.publicKey,
           metadata,
-          owner: vaultOwner,
+          vaultOwner,
           destination: claimTokenAccount.publicKey,
           tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
         })

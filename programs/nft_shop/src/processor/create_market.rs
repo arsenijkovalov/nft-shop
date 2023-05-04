@@ -26,9 +26,9 @@ impl<'info> CreateMarket<'info> {
         let store = &self.store;
         let selling_resource_owner = &self.selling_resource_owner;
         let selling_resource = &mut self.selling_resource;
-        let mint = self.mint.to_account_info();
+        let treasury_mint = self.treasury_mint.to_account_info();
         let treasury_holder = self.treasury_holder.to_account_info();
-        let owner = &self.owner;
+        let treasury_owner = &self.treasury_owner;
 
         if name.len() > NAME_MAX_LEN {
             return Err(ErrorCode::NameIsTooLong.into());
@@ -61,26 +61,26 @@ impl<'info> CreateMarket<'info> {
             return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
         }
 
-        let is_native = mint.key() == System::id();
+        let is_native = treasury_mint.key() == System::id();
 
         if !is_native {
-            if mint.owner != &anchor_spl::token::ID
+            if treasury_mint.owner != &anchor_spl::token::ID
                 || treasury_holder.owner != &anchor_spl::token::ID
             {
                 return Err(ProgramError::IllegalOwner.into());
             }
 
-            if accessor::mint(&treasury_holder)? != *mint.key {
+            if accessor::mint(&treasury_holder)? != *treasury_mint.key {
                 return Err(ProgramError::InvalidAccountData.into());
             }
 
-            if accessor::authority(&treasury_holder)? != owner.key() {
+            if accessor::authority(&treasury_holder)? != treasury_owner.key() {
                 return Err(ProgramError::InvalidAccountData.into());
             }
         } else {
             // for native SOL we use PDA as a treasury holder
             // because of security reasons(only program can spend this SOL)
-            if treasury_holder.key != owner.key {
+            if treasury_holder.key != treasury_owner.key {
                 return Err(ProgramError::InvalidAccountData.into());
             }
 
@@ -103,9 +103,9 @@ impl<'info> CreateMarket<'info> {
 
         market.store = store.key();
         market.selling_resource = selling_resource.key();
-        market.treasury_mint = mint.key();
+        market.treasury_mint = treasury_mint.key();
         market.treasury_holder = treasury_holder.key();
-        market.treasury_owner = owner.key();
+        market.treasury_owner = treasury_owner.key();
         market.owner = selling_resource_owner.key();
         market.name = puffed_out_string(name, NAME_MAX_LEN);
         market.description = puffed_out_string(description, DESCRIPTION_MAX_LEN);

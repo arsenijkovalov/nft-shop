@@ -24,7 +24,7 @@ impl<'info> Withdraw<'info> {
         let system_program = &self.system_program;
         let treasury_holder = Box::new(&self.treasury_holder);
         let treasury_mint = Box::new(&self.treasury_mint);
-        let treasury_owner = &self.owner;
+        let treasury_owner = &self.treasury_owner;
         let destination = &self.destination;
         let selling_resource = &self.selling_resource;
         let funder = &self.funder;
