@@ -190,7 +190,7 @@ pub struct ChangeMarket<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(primary_metadata_creators: u8, creators: Vec<mpl_token_metadata::state::Creator>)]
+#[instruction(primary_metadata_creators_bump: u8, creators: Vec<mpl_token_metadata::state::Creator>)]
 pub struct SavePrimaryMetadataCreators<'info> {
     #[account(mut, owner=mpl_token_metadata::id())]
     /// CHECK: checked in program
@@ -203,7 +203,7 @@ pub struct SavePrimaryMetadataCreators<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(trade_history:u8, vault_owner_bump: u8)]
+#[instruction(trade_history_bump:u8, vault_owner_bump: u8)]
 pub struct Buy<'info> {
     #[account(mut, has_one=treasury_holder, has_one=selling_resource)]
     market: Box<Account<'info, Market>>,
