@@ -231,6 +231,46 @@ describe("nft_shop", async () => {
       storeAdminKeypair,
     });
 
+    const sellingResourceData =
+      await nftShopProgram.account.sellingResource.fetch(
+        sellingResourceKeypair.publicKey
+      );
+
+    const [metadata] = findMetadataAddress({
+      mint: sellingResourceData.resource,
+    });
+    const [masterEdition] = findEditionAddress({
+      mint: sellingResourceData.resource,
+    });
+
+    const [primaryMetadataCreators, primaryMetadataCreatorsBump] =
+      findPrimaryMetadataCreatorsAddress(metadata);
+
+    const primaryRoyaltiesHolder = anchor.web3.Keypair.generate();
+    const creators = [
+      {
+        address: primaryRoyaltiesHolder.publicKey,
+        share: 100,
+        verified: false,
+      },
+    ];
+
+    // Save Primary Metadata Creators
+    try {
+      const tx = await nftShopProgram.methods
+        .savePrimaryMetadataCreators(primaryMetadataCreatorsBump, creators)
+        .accounts({
+          metadataUpdateAuthority: sellingResourceOwnerKeypair.publicKey,
+          metadata,
+          primaryMetadataCreators,
+        })
+        .signers([sellingResourceOwnerKeypair])
+        .rpc();
+      console.log("Transaction [Save Primary Metadata Creators]", tx);
+    } catch (error) {
+      console.log(error);
+    }
+
     const marketKeypair = anchor.web3.Keypair.generate();
 
     const treasuryMintKeypair = anchor.web3.Keypair.generate();
@@ -318,11 +358,6 @@ describe("nft_shop", async () => {
       console.log(error);
     }
 
-    const sellingResourceData =
-      await nftShopProgram.account.sellingResource.fetch(
-        sellingResourceKeypair.publicKey
-      );
-
     const [tradeHistory, tradeHistoryBump] = findTradeHistoryAddress(
       payer.publicKey,
       marketKeypair.publicKey
@@ -370,13 +405,6 @@ describe("nft_shop", async () => {
       amount: 1,
     });
 
-    const [metadata] = findMetadataAddress({
-      mint: sellingResourceData.resource,
-    });
-    const [masterEdition] = findEditionAddress({
-      mint: sellingResourceData.resource,
-    });
-
     const [editionMarker] = findEditionMarkerAddress({
       mint: sellingResourceData.resource,
       supply: sellingResourceData.supply.toNumber(),
@@ -387,34 +415,6 @@ describe("nft_shop", async () => {
     const [newEdition] = findEditionAddress({
       mint: newMintKeypair.publicKey,
     });
-
-    const [primaryMetadataCreators, primaryMetadataCreatorsBump] =
-      findPrimaryMetadataCreatorsAddress(metadata);
-
-    const primaryRoyaltiesHolder = anchor.web3.Keypair.generate();
-    const creators = [
-      {
-        address: primaryRoyaltiesHolder.publicKey,
-        share: 100,
-        verified: false,
-      },
-    ];
-
-    // Save Primary Metadata Creators
-    try {
-      const tx = await nftShopProgram.methods
-        .savePrimaryMetadataCreators(primaryMetadataCreatorsBump, creators)
-        .accounts({
-          metadataUpdateAuthority: sellingResourceOwnerKeypair.publicKey,
-          metadata,
-          primaryMetadataCreators,
-        })
-        .signers([sellingResourceOwnerKeypair])
-        .rpc();
-      console.log("Transaction [Save Primary Metadata Creators]", tx);
-    } catch (error) {
-      console.log(error);
-    }
 
     const userWalletKeypair = payer.payer;
 
