@@ -1,6 +1,17 @@
 # nft-shop
 
 ## Rust Tests
+### Prerequisites
+#### Solana
+Version of Solana on which the tests were run: 1.15.2
+```
+sh -c "$(curl -sSfL https://release.solana.com/v1.15.2/install)"
+```
+#### Rust
+`IMPORTANT` Version of Rust on which the tests were run: 1.66.1
+```
+rustup install 1.66.1 && rustup default 1.66.1
+```
 ### Build
 ```
 cargo build-bpf
