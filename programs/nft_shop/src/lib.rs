@@ -2,6 +2,7 @@
 #![allow(clippy::too_many_arguments)]
 
 pub mod error;
+pub mod pda;
 pub mod processor;
 pub mod state;
 pub mod utils;
@@ -20,7 +21,7 @@ use anchor_spl::{
     token::{Mint, Token, TokenAccount},
 };
 
-declare_id!("7pXnhhAyw8HCwWPHEYy3nwhdFCc4nQBWVAgQGTBPAoDe");
+declare_id!("5fbVeikajrUezHy2MyfD4WypQ6Yjcq6Nna4peA8syGdE");
 
 #[program]
 pub mod nft_shop {
@@ -281,13 +282,13 @@ pub struct Withdraw<'info> {
     /// CHECK: checked in program
     treasury_owner: UncheckedAccount<'info>,
     #[account(mut)]
-    payer: Signer<'info>,
+    selling_resource_owner: Signer<'info>,
     #[account(mut)]
     /// CHECK: checked in program
     destination: UncheckedAccount<'info>,
     /// CHECK: checked in program
     funder: UncheckedAccount<'info>,
-    #[account(init_if_needed, seeds=[PAYOUT_TICKET_PREFIX.as_bytes(), market.key().as_ref(), funder.key().as_ref()], bump, payer=payer, space=PayoutTicket::LEN)]
+    #[account(init_if_needed, seeds=[PAYOUT_TICKET_PREFIX.as_bytes(), market.key().as_ref(), funder.key().as_ref()], bump, payer=selling_resource_owner, space=PayoutTicket::LEN)]
     payout_ticket: Box<Account<'info, PayoutTicket>>,
     rent: Sysvar<'info, Rent>,
     clock: Sysvar<'info, Clock>,

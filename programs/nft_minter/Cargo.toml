@@ -16,6 +16,6 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.27.0"
-anchor-spl = "0.27.0"
+anchor-lang = { git = "https://github.com/coral-xyz/anchor" }
+anchor-spl = { git = "https://github.com/coral-xyz/anchor" }
 mpl-token-metadata = { version = "1.9.1", features = [ "no-entrypoint" ] }

@@ -32,3 +32,9 @@ pub fn into_mpl_creators(creators: Option<Vec<Creator>>) -> Option<Vec<MPL_Creat
             .collect()
     })
 }
+
+pub fn token_metadata_program_id() -> Pubkey {
+    "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        .parse()
+        .unwrap()
+}

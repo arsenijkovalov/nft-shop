@@ -16,7 +16,12 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = { version = "0.27.0", features = ["init-if-needed"] }
-anchor-spl = { version = "0.27.0" }
+anchor-lang = { git = "https://github.com/coral-xyz/anchor", features = ["init-if-needed"] }
+anchor-spl = { git = "https://github.com/coral-xyz/anchor" }
 spl-token = "3.5.0"
 mpl-token-metadata = { version = "1.9.1", features = [ "no-entrypoint" ] }
+nft_minter = { path = "../nft_minter", features = ["no-entrypoint"] }
+
+[dev-dependencies]
+solana-program-test = "1.14"
+anchor-client = { git = "https://github.com/coral-xyz/anchor" }

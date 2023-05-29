@@ -28,7 +28,7 @@ impl<'info> Withdraw<'info> {
         let destination = &self.destination;
         let selling_resource = &self.selling_resource;
         let funder = &self.funder;
-        let payer = &self.payer;
+        let selling_resource_owner = &self.selling_resource_owner;
         let payout_ticket = &mut self.payout_ticket;
         let _rent = &self.rent;
         let clock = &self.clock;
@@ -37,6 +37,11 @@ impl<'info> Withdraw<'info> {
         let selling_resource_key = selling_resource.key();
         let treasury_mint_key = market.treasury_mint;
         let funder_key = funder.key();
+
+        // Check, that provided right Market owner
+        if !selling_resource_owner.key.eq(&market.owner) {
+            return Err(ErrorCode::SellingResourceOwnerInvalid.into());
+        }
 
         // Check, that `Market` is `Ended`
         if let Some(end_date) = market.end_date {
@@ -188,7 +193,7 @@ impl<'info> Withdraw<'info> {
             if destination.lamports() == 0 && destination.data_is_empty() {
                 let cpi_program = associated_token_program.to_account_info();
                 let cpi_accounts = associated_token::Create {
-                    payer: payer.to_account_info(),
+                    payer: selling_resource_owner.to_account_info(),
                     associated_token: destination.to_account_info(),
                     authority: funder.to_account_info(),
                     mint: treasury_mint.to_account_info(),

@@ -5,7 +5,7 @@ import { NftMinter } from "../target/types/nft_minter";
 import {
   TOKEN_METADATA_PROGRAM_ID,
   findMetadataAddress,
-  findEditionAddress,
+  findMasterEditionAddress,
   findVaultOwnerAddress,
   createMintAccount,
   createTokenAccount,
@@ -125,7 +125,7 @@ export const initSellingResource = async ({
     console.log(error);
   }
 
-  const [masterEdition, masterEditionBump] = findEditionAddress({
+  const [masterEdition, masterEditionBump] = findMasterEditionAddress({
     mint: resourceMintKeypair.publicKey,
   });
 
@@ -239,7 +239,7 @@ describe("nft_shop", async () => {
     const [metadata] = findMetadataAddress({
       mint: sellingResourceData.resource,
     });
-    const [masterEdition] = findEditionAddress({
+    const [masterEdition] = findMasterEditionAddress({
       mint: sellingResourceData.resource,
     });
 
@@ -412,7 +412,7 @@ describe("nft_shop", async () => {
     const [newMetadata] = findMetadataAddress({
       mint: newMintKeypair.publicKey,
     });
-    const [newEdition] = findEditionAddress({
+    const [newEdition] = findMasterEditionAddress({
       mint: newMintKeypair.publicKey,
     });
 
@@ -496,11 +496,11 @@ describe("nft_shop", async () => {
           treasuryOwner,
           destination,
           funder: primaryRoyaltiesHolder.publicKey,
-          payer: payerKeypair.publicKey,
+          sellingResourceOwner: sellingResourceOwnerKeypair.publicKey,
           payoutTicket,
         })
         .remainingAccounts(primaryMetadataCreatorsData)
-        .signers([payerKeypair])
+        .signers([sellingResourceOwnerKeypair])
         .rpc();
       console.log("Transaction [Withdraw]", tx);
     } catch (error) {

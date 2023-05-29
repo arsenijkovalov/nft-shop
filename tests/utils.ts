@@ -214,7 +214,7 @@ export const findMetadataAddress = ({
     TOKEN_METADATA_PROGRAM_ID
   );
 
-export const findEditionAddress = ({
+export const findMasterEditionAddress = ({
   mint,
 }: {
   mint: anchor.web3.PublicKey;
