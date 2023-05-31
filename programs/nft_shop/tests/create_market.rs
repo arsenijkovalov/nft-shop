@@ -767,7 +767,7 @@ async fn failure_market_end_date_is_earlier_than_start_date() {
 
 #[tokio::test]
 #[should_panic]
-async fn failure_treasury_mint_unitialized() {
+async fn failure_treasury_mint_uninitialized() {
     let mut context = nft_shop_program_test().start_with_context().await;
 
     let (store_admin, store_keypair) = create_store(&mut context).await;
@@ -876,7 +876,7 @@ async fn failure_treasury_mint_unitialized() {
 
 #[tokio::test]
 #[should_panic]
-async fn failure_treasury_holder_unitialized() {
+async fn failure_treasury_holder_uninitialized() {
     let mut context = nft_shop_program_test().start_with_context().await;
 
     let (store_admin, store_keypair) = create_store(&mut context).await;
